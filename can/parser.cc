@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "cereal/logger/logger.h"
-#include "opendbc/can/common.h"
+#include "common.h"
+#include "msg.capnp.h"
 
 int64_t get_raw_value(const std::vector<uint8_t> &msg, const Signal &sig) {
   int64_t ret = 0;
@@ -57,7 +57,7 @@ bool MessageState::parse(uint64_t sec, const std::vector<uint8_t> &dat) {
     }
 
     if (checksum_failed || counter_failed) {
-      LOGE("0x%X message checks failed, checksum failed %d, counter failed %d", address, checksum_failed, counter_failed);
+      WARN("0x%X message checks failed, checksum failed %d, counter failed %d", address, checksum_failed, counter_failed);
       return false;
     }
 
@@ -191,7 +191,7 @@ void CANParser::update_string(const std::string &data, bool sendcan) {
 
   // extract the messages
   capnp::FlatArrayMessageReader cmsg(aligned_buf.slice(0, buf_size));
-  cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
+  Event::Reader event = cmsg.getRoot<Event>();
 
   if (first_sec == 0) {
     first_sec = event.getLogMonoTime();
@@ -215,7 +215,7 @@ void CANParser::update_strings(const std::vector<std::string> &data, std::vector
   query_latest(vals, current_sec);
 }
 
-void CANParser::UpdateCans(uint64_t sec, const capnp::List<cereal::CanData>::Reader& cans) {
+void CANParser::UpdateCans(uint64_t sec, const capnp::List<CanData>::Reader& cans) {
   //DEBUG("got %d messages\n", cans.size());
 
   bool bus_empty = true;
@@ -261,7 +261,7 @@ void CANParser::UpdateCans(uint64_t sec, const capnp::List<cereal::CanData>::Rea
 #endif
 
 void CANParser::UpdateCans(uint64_t sec, const capnp::DynamicStruct::Reader& cmsg) {
-  // assume message struct is `cereal::CanData` and parse
+  // assume message struct is `CanData` and parse
   assert(cmsg.has("address") && cmsg.has("src") && cmsg.has("dat") && cmsg.has("busTime"));
 
   if (cmsg.get("src").as<uint8_t>() != bus) {
@@ -299,9 +299,9 @@ void CANParser::UpdateValid(uint64_t sec) {
     if (state.check_threshold > 0 && (missing || timed_out)) {
       if (show_missing && !bus_timeout) {
         if (missing) {
-          LOGE("0x%X '%s' NOT SEEN", state.address, state.name.c_str());
+          WARN("0x%X '%s' NOT SEEN", state.address, state.name.c_str());
         } else if (timed_out) {
-          LOGE("0x%X '%s' TIMED OUT", state.address, state.name.c_str());
+          WARN("0x%X '%s' TIMED OUT", state.address, state.name.c_str());
         }
       }
       _valid = false;

@@ -3,7 +3,7 @@ import os
 import unittest
 import random
 
-import cereal.messaging as messaging
+from cereal import log
 from opendbc.can.parser import CANParser
 from opendbc.can.packer import CANPacker
 
@@ -13,7 +13,7 @@ TEST_DBC = os.path.abspath(os.path.join(os.path.dirname(__file__), "test.dbc"))
 
 # Python implementation so we don't have to depend on boardd
 def can_list_to_can_capnp(can_msgs, msgtype='can', logMonoTime=None):
-  dat = messaging.new_message()
+  dat = log.Event.new_message()
   dat.init(msgtype, len(can_msgs))
 
   if logMonoTime is not None:

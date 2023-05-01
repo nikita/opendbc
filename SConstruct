@@ -53,11 +53,6 @@ env = Environment(
 common = ''
 Export('env', 'zmq', 'arch', 'common')
 
-cereal = [File('#cereal/libcereal.a')]
-messaging = [File('#cereal/libmessaging.a')]
-Export('cereal', 'messaging')
-
-
 envCython = env.Clone()
 envCython["CPPPATH"] += [np.get_include()]
 envCython["CCFLAGS"] += ["-Wno-#warnings", "-Wno-shadow", "-Wno-deprecated-declarations"]
@@ -77,5 +72,4 @@ envCython["LIBS"] = python_libs
 Export('envCython')
 
 
-SConscript(['cereal/SConscript'])
-SConscript(['opendbc/can/SConscript'])
+SConscript(['can/SConscript'])
